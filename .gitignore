@@ -1,0 +1,28 @@
+# Logs
+product-catalog/logs
+product-catalog/*.log
+product-catalog/npm-debug.log*
+product-catalog/yarn-debug.log*
+product-catalog/yarn-error.log*
+product-catalog/pnpm-debug.log*
+product-catalog/lerna-debug.log*
+
+product-catalog/node_modules
+product-catalog/dist
+product-catalog/dist-ssr
+product-catalog/*.local
+
+# Editor directories and files
+product-catalog/.vscode/*
+product-catalog/!.vscode/extensions.json
+product-catalog/.idea
+product-catalog/.DS_Store
+product-catalog/*.suo
+product-catalog/*.ntvs*
+product-catalog/*.njsproj
+product-catalog/*.sln
+product-catalog/*.sw?
+
+backend/node_modules
+backend/.env
+backend/amz_uk_processed_data.csv
