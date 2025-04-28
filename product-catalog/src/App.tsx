@@ -13,7 +13,7 @@ function App() {
   const fetchPage = async (q: string, pageNum: number) => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:4000/api/products", {
+      const { data } = await axios.get("https://naturelanguagesearch-server.onrender.com/api/products", {
         params: { q, page: pageNum, limit: 20 },
       });
       setProducts(data.hits);
