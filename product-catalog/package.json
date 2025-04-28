@@ -13,6 +13,7 @@
   "dependencies": {
     "algoliasearch": "^4.10.3",
     "axios": "^1.9.0",
+    "product-catalog": "file:",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xlsx": "^0.18.5"

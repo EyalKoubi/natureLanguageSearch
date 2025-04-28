@@ -51,19 +51,55 @@ app.get("/api/products", async (req: Request, res: Response) => {
     }
 
     const groqResponse = await axios.post(
-      "https://groq.com/?gad_source=1&gbraid=0AAAAAoNZBHFTo_coCfdj7KSMINpU79_ru&gclid=Cj0KCQjw5azABhD1ARIsAA0WFUHn7uP-PhDmYz_hEeffsbnPEOR3T0SEs95CSVQoPErJSBBrCIB8mu0aAo0WEALw_wcB",
+      "https://api.groq.com/openai/v1/chat/completions",
       {
-        model: "mixtral-8x7b-32768",
+        model: "llama3-70b-8192",
         messages: [
           {
             role: "system",
-            content: "Convert natural language product search into keywords.",
+            content: `You are a smart assistant for an E-Commerce platform.  
+Products are stored in English.  
+Users submit search queries in either Hebrew or English, using free natural language.
+
+Instructions:
+- First, if the query is in Hebrew, translate it accurately into English.
+- After translation (if needed), analyze and extract:
+  - "keywords": a list of 2–5 broad and meaningful English keywords for search.
+  - "filters": an object with possible search filters (minPrice, maxPrice, minStars, categories).
+
+Important:
+- If the query includes multiple details, focus on extracting only the **main essential concepts** that most help to find products.
+- Be **creative and flexible**: if exact words don't make sense for search, generalize to broader categories (e.g., "smart devices", "home gadgets", "outdoor furniture").
+- Prefer **well-known search terms** over too-specific or uncommon ones.
+- Return **always valid JSON**, with no extra explanations.
+
+Example:
+
+Input: "גאדג'טים לבית חכם תואמי אלקסה עם דירוג מעל 4 כוכבים"
+Output:
+{
+  "keywords": ["smart home gadgets", "Alexa compatible"],
+  "filters": {
+    "minStars": 4
+  }
+}
+
+Input: "מיטה זוגית מתקפלת עם מקום לאחסון"
+Output:
+{
+  "keywords": ["foldable bed", "storage bed"],
+  "filters": {}
+}
+
+Even if input is complex or ambiguous, you must extract **usable** and **broad** keywords for product search.
+`,
           },
           {
             role: "user",
             content: q,
           },
         ],
+        temperature: 0.7,
       },
       {
         headers: {
@@ -73,11 +109,43 @@ app.get("/api/products", async (req: Request, res: Response) => {
       }
     );
 
-    const keywords = groqResponse.data.choices?.[0]?.message?.content || q;
+    let keywords = q;
+    let filters: any = {};
+
+    try {
+      const parsed = JSON.parse(
+        groqResponse.data.choices?.[0]?.message?.content || "{}"
+      );
+      const parsedKeywords = (parsed.keywords || []).join(" ").trim();
+      keywords = parsedKeywords.length > 0 ? parsedKeywords : q;
+      filters = parsed.filters || {};
+    } catch (parseError) {
+      console.warn("⚠️ Failed to parse GROQ response, fallback to raw query.");
+      keywords = q;
+    }
+
+    const filtersString = [];
+
+    if (filters.minStars) {
+      filtersString.push(`stars >= ${filters.minStars}`);
+    }
+    if (filters.minPrice) {
+      filtersString.push(`price >= ${filters.minPrice}`);
+    }
+    if (filters.maxPrice) {
+      filtersString.push(`price <= ${filters.maxPrice}`);
+    }
+    if (filters.categories && Array.isArray(filters.categories)) {
+      const categoryFilters = filters.categories.map(
+        (cat: string) => `category:"${cat}"`
+      );
+      filtersString.push(`(${categoryFilters.join(" OR ")})`);
+    }
 
     const searchResult = await index.search<Product>(keywords, {
       page,
       hitsPerPage: limit,
+      filters: filtersString.join(" AND ") || undefined,
     });
 
     return res.json({

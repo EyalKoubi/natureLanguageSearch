@@ -39,13 +39,27 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>📦 Product Catalog</h1>
+      <h1 className="page-title">📦 קטלוג מוצרים</h1>
       <input
-        placeholder="חיפוש חופשי..."
+        placeholder="חיפוש חופשי"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        style={{ width: "80%", padding: 10, marginBottom: 20 }}
+        style={{
+          width: "80%",
+          padding: "12px 16px",
+          fontSize: "1rem",
+          borderRadius: "10px",
+          border: "1px solid #ccc",
+          outline: "none",
+          marginBottom: "2rem",
+          transition: "border-color 0.3s ease",
+          textAlign: "right",
+          direction: "rtl",
+        }}
+        onFocus={(e) => (e.target.style.borderColor = "#007bff")}
+        onBlur={(e) => (e.target.style.borderColor = "#ccc")}
       />
+
       {loading && <p>⏳ Loading...</p>}
       <div className="products-grid">
         {products.map((p) => (
@@ -56,11 +70,11 @@ function App() {
           </div>
         ))}
       </div>
-      <div style={{ margin: "1rem 0" }}>
+      <div className="pagination-buttons">
         <button disabled={page <= 0} onClick={() => fetchPage(query, page - 1)}>
           Previous
         </button>
-        <span style={{ margin: "0 1rem" }}>
+        <span style={{ margin: "0 1rem", fontSize: "1.2rem" }}>
           Page {page + 1} of {nbPages}
         </span>
         <button
